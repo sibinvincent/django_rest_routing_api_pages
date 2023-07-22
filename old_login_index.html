@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login Page</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="login-form">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <br>
+    <br>
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <br>
+    <br>
+
+    <button type="submit">Login</button>
+  </form>
+  <br>
+  <br>
+
+  <div id="login-response"></div>
+
+  <script>
+    $(document).ready(function() {
+      // Handle the form submission
+      $('#login-form').submit(function(event) {
+        event.preventDefault();
+
+        // Get the form data
+        var formData = {
+          'username': $('#username').val(),
+          'password': $('#password').val()
+        };
+
+        // Make the AJAX request to the login API
+        $.ajax({
+          type: 'POST',
+          url: 'http://localhost:8000/api/login/login/',
+          data: formData,
+          dataType: 'json',
+          success: function(data) {
+            // Handle the successful response
+            // You can do something with the tokens and user ID here
+            $('#login-response').html('Login successful! Redirecting to /list/index.html...');
+            // Redirect to the /list/index.html page after a short delay (e.g., 2 seconds)
+            setTimeout(function() {
+              window.location.href = '/list/';
+            }, 20);   // this 20 indicates the milliseconds delay before going to the next page
+          },
+          error: function(xhr, status, error) {
+            // Handle errors
+            // Display the error message in the login-response div
+            $('#login-response').html('Error: ' + xhr.responseText);
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
