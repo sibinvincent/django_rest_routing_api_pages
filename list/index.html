@@ -8,6 +8,10 @@
         <button onclick="logout()">Logout</button>
     </div>
     <h1>Hello</h1>
+    <div>
+        <!-- Add Book button -->
+        <button onclick="addBook()">Add Book</button>
+    </div>
     <div id="book-list">
         <!-- Book list will be displayed here -->
     </div>
@@ -19,9 +23,47 @@
             window.location.href = '/';
         }
 
+        // Function to handle adding a new book
+        function addBook() {
+            // Replace 'add-book.html' with the correct URL of your add book page
+            window.location.href = '/add/';
+        }
+
         // Function to get the JWT token from localStorage
         function getJWTToken() {
             return localStorage.getItem('jwt_token');
+        }
+
+        // Function to handle editing a book
+        function editBook(bookId) {
+            // Replace 'edit-book.html' with the correct URL of your edit book page, passing the bookId as a query parameter
+            window.location.href = `/edit/?id=${bookId}`;
+        }
+
+        // Function to handle deleting a book
+        function deleteBook(bookId) {
+            // Replace 'http://127.0.0.1:8000/book/' with the correct API URL for deleting a book by its ID
+            const deleteUrl = `http://127.0.0.1:8000/book/${bookId}`;
+            const jwtToken = getJWTToken();
+
+            if (jwtToken) {
+                fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Book successfully deleted, remove it from the book list
+                        const bookElement = document.getElementById(`book-${bookId}`);
+                        bookElement.remove();
+                    } else {
+                        throw new Error('Failed to delete the book.');
+                    }
+                })
+                .catch(error => console.error('Error deleting the book:', error));
+            }
         }
 
         // Fetch the list of all books from the API with the JWT token in the Authorization header
@@ -35,26 +77,30 @@
             })
             .then(response => response.json())
             .then(data => {
+                // Sort the data array by book ID in descending order
+                data.sort((a, b) => b.id - a.id);
+
                 // Build the HTML content for the book list
-                let bookListHTML = '<ul>';
+                let bookListHTML = '<ol>';
                 data.forEach(book => {
                     bookListHTML += `
-                        <li>
+                        <li id="book-${book.id}">
                             <h1>${book.book_name}</h1>
                             <img src="${book.image}" alt="${book.title}" style="max-width: 300px;">
                             <p>Title: ${book.title}</p>
                             <p>Author: ${book.author}</p>
+                            <button onclick="editBook(${book.id})">Edit</button>
+                            <button onclick="deleteBook(${book.id})">Delete</button>
                         </li>
                     `;
-                });
-                bookListHTML += '</ul>';
+                }); 
+                bookListHTML += '</ol>';
 
                 // Update the book-list div with the generated HTML
                 document.getElementById('book-list').innerHTML = bookListHTML;
 
                 // Set the SameSite attribute for the "tabstyle" cookie
                 document.cookie = 'tabstyle=value; SameSite=None; Secure';
-
             })
             .catch(error => console.error('Error fetching book list:', error));
         }

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Book</title>
+</head>
+<body>
+    <h1>Edit Book</h1>
+
+    <div id="book-details">
+        <!-- Book details will be displayed here -->
+    </div>
+
+    <script>
+        // Function to fetch book details for editing
+        function fetchBookDetails(bookId) {
+            // Replace 'http://127.0.0.1:8000/book/' with the correct API URL for retrieving a book by its ID
+            const apiUrl = `http://127.0.0.1:8000/book/${bookId}/`;
+            const jwtToken = getJWTToken();
+
+            if (jwtToken) {
+                fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to fetch book details for editing.');
+                    }
+                })
+                .then(book => {
+                    // Display the book details in the form for editing
+                    const bookDetailsDiv = document.getElementById('book-details');
+                    bookDetailsDiv.innerHTML = `
+                        <form onsubmit="updateBook(event, ${book.id})" enctype="multipart/form-data">
+                            <label for="book_name">Book Name:</label>
+                            <input type="text" id="book_name" name="book_name" value="${book.book_name}" required>
+                            <br>
+                            <label for="title">Title:</label>
+                            <input type="text" id="title" name="title" value="${book.title}" required>
+                            <br>
+                            <label for="author">Author:</label>
+                            <input type="text" id="author" name="author" value="${book.author}" required>
+                            <br>
+                            <!-- Display the current book image -->
+                            <img src="${book.image}" alt="${book.title}" style="max-width: 300px;">
+                            <br>
+
+                            <!-- Input field for choosing a new image (optional) -->
+                            <label for="image">Upload New Image (optional):</label>
+                            <input type="file" id="image" name="image">
+
+                            <br>
+                            <button type="submit">Save Changes</button>
+                        </form>
+                    `;
+                })
+                .catch(error => console.error('Error fetching book details:', error));
+            }
+        }
+
+        // Function to handle updating the book
+        function updateBook(event, bookId) {
+            event.preventDefault();
+            const jwtToken = getJWTToken();
+            const apiUrl = `http://127.0.0.1:8000/book/${bookId}/`;
+            let formData;
+
+            if (jwtToken) {
+                // Check if a new image has been selected
+                const imageInput = document.getElementById('image');
+                if (imageInput.files.length > 0) {
+                    // If a new image is selected, use the FormData object to include the image in the request
+                    formData = new FormData(event.target);
+                } else {
+                    // If no new image is selected, create a new FormData object with only the other form fields
+                    formData = new FormData();
+                    formData.append('book_name', event.target.book_name.value);
+                    formData.append('title', event.target.title.value);
+                    formData.append('author', event.target.author.value);
+                }
+
+                fetch(apiUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Book details updated successfully!');
+                        // Redirect the user back to the book list page after editing
+                        window.location.href = '/list/';
+                    } else {
+                        throw new Error('Failed to update book details.');
+                    }
+                })
+                .catch(error => console.error('Error updating book:', error));
+            }
+        }
+
+        // Function to get the JWT token from localStorage
+        function getJWTToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        // Get the bookId from the query parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('id');
+
+        // Fetch and display the book details for editing
+        if (bookId) {
+            fetchBookDetails(bookId);
+        } else {
+            console.error('Book ID not provided in the URL.');
+        }
+    </script>
+</body>
+</html>

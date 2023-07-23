@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book List</title>
+</head>
+<body>
+    <div>
+        <button onclick="logout()">Logout</button>
+    </div>
+    <h1>Hello</h1>
+    <div id="book-list">
+        <!-- Book list will be displayed here -->
+    </div>
+
+    <script>
+        // Function to handle the logout action
+        function logout() {
+            // Replace 'main-login-page.html' with the correct URL of your main login page
+            window.location.href = '/';
+        }
+
+        // Function to get the JWT token from localStorage
+        function getJWTToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        // Fetch the list of all books from the API with the JWT token in the Authorization header
+        const jwtToken = getJWTToken();
+        if (jwtToken) {
+            const apiUrl = 'http://127.0.0.1:8000/book/'; // Replace with the correct API URL for listing all books
+            fetch(apiUrl, {
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}` // Include the JWT token in the Authorization header
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Build the HTML content for the book list
+                let bookListHTML = '<ul>';
+                data.forEach(book => {
+                    bookListHTML += `
+                        <li>
+                            <h1>${book.book_name}</h1>
+                            <img src="${book.image}" alt="${book.title}" style="max-width: 300px;">
+                            <p>Title: ${book.title}</p>
+                            <p>Author: ${book.author}</p>
+                        </li>
+                    `;
+                });
+                bookListHTML += '</ul>';
+
+                // Update the book-list div with the generated HTML
+                document.getElementById('book-list').innerHTML = bookListHTML;
+
+                // Set the SameSite attribute for the "tabstyle" cookie
+                document.cookie = 'tabstyle=value; SameSite=None; Secure';
+
+            })
+            .catch(error => console.error('Error fetching book list:', error));
+        }
+    </script>
+</body>
+</html>
